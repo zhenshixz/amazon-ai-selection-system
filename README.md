@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Amazon AI 智能选品系统
 
-## Getting Started
+参照演示视频搭建的第一版可运行 Demo。用户可以输入关键词实时读取 Amazon US 公开搜索结果，选择锚点商品，提取 Listing 信息，采集前三页竞品并生成分析报告。
 
-First, run the development server:
+## 当前功能
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Amazon US 关键词实时搜索，USD 价格
+- 商品收藏与锚点选择
+- Amazon 详情页字段、颜色、BSR、上架日期和服装设计属性提取
+- 完整提取、部分提取、提取失败三种真实状态与字段覆盖率
+- 前三页竞品采集、缓存、ASIN 去重、自动备用通道与单页重试
+- 七阶段后端流式分析，显示真实处理量、阶段摘要和耗时
+- 价格带、公开需求代理、颜色、领口、袖型、面料、版型、元素和图案统计
+- 数据质量、市场机会、锚点总览、证据型建议与参考图对比
+- 改款图片暂用真实竞品商品图，并在界面中明确标注非 AI 生图
+- 默认日间模式，可切换夜间模式；已适配桌面和移动端
+
+## 启动
+
+双击 `start-demo.bat`。脚本会检查路径、Node.js、npm 和依赖，在固定的 `3000` 端口启动生产模式服务，并显示本机与局域网地址。只有源码比现有构建更新时才会重新构建；启动完成前会同时验证健康接口以及局域网页面的 JS/CSS 资源。
+
+共享演示不要直接运行 `npm run dev`。开发模式会启用 HMR 和来源保护，电脑内网 IP 变化时可能出现“页面可见但脚本被 403 拦截、按钮无法操作”。`start-demo.bat` 和 `start-public-demo.bat` 均已统一使用稳定的生产服务。
+
+也可以手动运行：
+
+```powershell
+npm install
+npm run dev -- --hostname 0.0.0.0 --port 3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 数据说明
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+第一版优先直接读取 `amazon.com` 公开搜索页和商品详情页。只有解析到有效商品才判定成功；遇到限流、验证页、HTTP 200 但解析为空等情况，会轮换请求标识并自动通过 Jina Reader 读取同一公开页面。数据缓存 10 分钟，提供层已独立封装，后续可以替换为 Keepa、Rainforest 或公司自有服务。
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+月购买量只使用页面真实出现的 `bought in past month`，没有显示时保留为空，不生成虚构销量。
 
-## Learn More
+分析报告会展示价格、公开购买量和详情字段覆盖率，并按覆盖率给出高/中/低置信度。BSR、上架日期、颜色变体等 Amazon 未公开或未稳定返回的字段会明确显示“Amazon 未公开”，不会用演示值补齐。
 
-To learn more about Next.js, take a look at the following resources:
+分析进度来自后端真实任务。首次分析会补充高需求竞品 Listing，通常需要一段时间；再次分析命中缓存时会明显加快，这是正常行为，不会人为增加等待动画。已完成报告会保存在当前浏览器标签会话中，刷新后可恢复。
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 问题跟踪
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+演示验收中发现的问题统一记录在 [`docs/ISSUE_TRACKER.md`](docs/ISSUE_TRACKER.md)，包括现象、原因判断、处理方向和验收标准。
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+2026-09-03 起，原型计划增加轻量 MCP 真实关键词验证。数据源研究结论、GitHub 参考项目的使用边界、需求优先级和验收标准统一记录在 [`docs/PROTOTYPE_REQUIREMENTS_PLAN.md`](docs/PROTOTYPE_REQUIREMENTS_PLAN.md)。
